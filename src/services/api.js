@@ -55,7 +55,7 @@ export const classificationAPI = {
     }) ;
   },
   getClassificationResult: (imageId) => api.get(`/classification/result/${imageId}`),
-  getClassificationStatus: (taskId) => api.get(`/classification/status/${taskId}`),
+  getClassificationStatus: (taskId) => api.get(`/classification/result/${taskId}`),
 };
 
 // Statistics API
