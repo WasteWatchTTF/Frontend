@@ -57,10 +57,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (usernameOrEmail, password) => {
     try {
       const response = await axios.post('/api/auth/signin', { usernameOrEmail, password });
-      const { accessToken, id, username, email, roles } = response.data;
+      const { token, id, username, email, roles } = response.data;
       
-      localStorage.setItem('token', accessToken);
-      setToken(accessToken);
+      localStorage.setItem('token', token);
+      setToken(token);
       setCurrentUser({ id, username, email, roles });
       
       return { success: true };
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || 'Errore durante il login. Riprova.'
       };
     }
-  };
+  } ;
 
   const register = async (username, email, password) => {
     try {

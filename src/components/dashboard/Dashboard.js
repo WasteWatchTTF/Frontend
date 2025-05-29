@@ -39,22 +39,60 @@ function Dashboard() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!isAuthenticated || !currentUser) {
+      // Wait for currentUser to be populated and ensure id is present
+      if (!isAuthenticated || !currentUser || !currentUser.id) {
         setLoading(false);
         return;
       }
 
-      try {
+      setLoading(true); // Set loading to true before fetchin g 
+      setError(''); // Clear previous errors
+
+      try { 
         // Fetch user statistics
-        const statsResponse = await statisticsAPI.getUserStatistics(currentUser.id);
-        setUserStats(statsResponse.data);
+        let statsData = null;
+        try {
+          const statsResponse = await statisticsAPI.getUserStatistics(currentUser.id);
+          statsData = statsResponse.data;
+        } catch (statsErr) {
+          console.log('Statistiche non disponibili per utente nuovo:', statsErr);
+          // Se le statistiche non sono disponibili, usiamo valori di default
+          statsData = {
+            totalClassifications: 0,
+            correctClassifications: 0,
+            ecoPoints: 0,
+            achievementsCount: 0
+          };
+        }
+        setUserStats(statsData);
 
         // Fetch recent classification results
-        const resultsResponse = await resultsAPI.getUserResults(currentUser.id, 0, 5);
-        setRecentResults(resultsResponse.data.content || []);
+        let resultsData = [];
+        try {
+          const resultsResponse = await resultsAPI.getUserResults(currentUser.id, 0, 5);
+          resultsData = resultsResponse.data.content || [];
+        } catch (resultsErr) {
+          console.log('Risultati non disponibili per utente nuovo:', resultsErr);
+          // Se i risultati non sono disponibili, usiamo un array vuoto
+          resultsData = [];
+        }
+        setRecentResults(resultsData);
+
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError('Impossibile caricare i dati della dashboard. Riprova più tardi.');
+        // Se abbiamo un errore generale, impostiamo valori di default invece di mostrare errore
+        setUserStats({
+          totalClassifications: 0,
+          correctClassifications: 0,
+          ecoPoints: 0,
+          achievementsCount: 0
+        });
+        setRecentResults([]);
+        
+        // Solo per errori gravi mostriamo un messaggio di errore
+        if (err.response && err.response.status >= 500) {
+          setError('Servizio temporaneamente non disponibile. I tuoi dati verranno caricati non appena il servizio sarà ripristinato.');
+        }
       } finally {
         setLoading(false);
       }
@@ -178,7 +216,7 @@ function Dashboard() {
                 <Typography variant="h6" gutterBottom>
                   Le Tue Statistiche
                 </Typography>
-                {userStats ? (
+                {userStats && userStats.totalClassifications > 0 ? (
                   <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid item xs={6}>
                       <Card variant="outlined" sx={{ textAlign: 'center', p: 1 }}>
@@ -229,24 +267,38 @@ function Dashboard() {
                       </Card>
                     </Grid>
                   </Grid>
+                ) : userStats && userStats.totalClassifications === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <RecyclingIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Non hai ancora effettuato nessuna classificazione.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Inizia a classificare i tuoi rifiuti per vedere le tue statistiche!
+                    </Typography>
+                    <Button
+                      component={RouterLink}
+                      to="/classification"
+                      variant="contained"
+                      color="primary"
+                      startIcon={<CameraIcon />}
+                    >
+                      Classifica Ora
+                    </Button>
+                  </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Nessuna statistica disponibile. Inizia a classificare i rifiuti per generare statistiche!
-                  </Typography>
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                     {/* Questo box verrà mostrato se userStats è null o undefined, 
+                         gestito anche dal messaggio di errore generale se presente */}
+                    <Typography variant="subtitle1" color="text.secondary">
+                      Statistiche non disponibili al momento.
+                    </Typography>
+                  </Box>
                 )}
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button 
-                    component={RouterLink} 
-                    to="/statistics" 
-                    color="primary"
-                  >
-                    Vedi tutte le statistiche
-                  </Button>
-                </Box>
               </Paper>
             </Grid>
 
-            {/* Recent Results */}
+            {/* Recent Classifications */}
             <Grid item xs={12} md={6}>
               <Paper sx={{ p: 2, height: '100%' }}>
                 <Typography variant="h6" gutterBottom>

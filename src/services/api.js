@@ -52,7 +52,7 @@ export const classificationAPI = {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
-    });
+    }) ;
   },
   getClassificationResult: (imageId) => api.get(`/classification/result/${imageId}`),
   getClassificationStatus: (taskId) => api.get(`/classification/status/${taskId}`),
@@ -61,7 +61,7 @@ export const classificationAPI = {
 // Statistics API
 export const statisticsAPI = {
   getUserStatistics: (userId) => api.get(`/statistics/user/${userId}`),
-  getUserAchievements: (userId) => api.get(`/statistics/user/${userId}/achievements`),
+  getUserAchievements: (userId) => api.get(`/statistics/user/${userId}/achievements`) ,
 };
 
 // Leaderboard API
