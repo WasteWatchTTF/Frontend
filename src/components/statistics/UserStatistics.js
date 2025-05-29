@@ -41,17 +41,37 @@ function UserStatistics() {
 
   useEffect(() => {
     const fetchUserStatistics = async () => {
-      if (!isAuthenticated || !currentUser) {
+      
+      // Wait for currentUser to be populated and ensure id is present
+      if (!isAuthenticated || !currentUser || !currentUser.id) {
+        console.log('UserStatistics - Mancano dati utente, uscendo early');
         setLoading(false);
         return;
       }
-
+      
       try {
         const response = await statisticsAPI.getUserStatistics(currentUser.id);
         setUserStats(response.data);
       } catch (err) {
         console.error('Error fetching user statistics:', err);
-        setError('Impossibile caricare le statistiche utente. Riprova più tardi.');
+        
+        // Se l'utente non ha statistiche (404) o è un nuovo utente, usiamo valori di default
+        if (err.response && (err.response.status === 404 || err.response.status === 500)) {
+          console.log('Statistiche non disponibili per utente nuovo, usando valori di default');
+          setUserStats({
+            totalClassifications: 0,
+            correctClassifications: 0,
+            ecoPoints: 0,
+            achievementsCount: 0,
+            materialDistribution: {},
+            weeklyActivity: {},
+            topMaterial: null,
+            mostActiveDay: null,
+            dailyAverage: 0
+          });
+        } else {
+          setError('Impossibile caricare le statistiche utente. Riprova più tardi.');
+        }
       } finally {
         setLoading(false);
       }

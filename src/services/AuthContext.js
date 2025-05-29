@@ -27,21 +27,50 @@ export const AuthProvider = ({ children }) => {
     const checkToken = async () => {
       if (token) {
         try {
-          // Check if token is expired
+          // Prima controlla se abbiamo dati utente salvati nel localStorage
+          const savedUserData = localStorage.getItem('userData');
+          if (savedUserData) {
+            try {
+              const userData = JSON.parse(savedUserData);
+              // Verifica che il token non sia scaduto
+              const decodedToken = jwtDecode(token);
+              
+              const currentTime = Date.now() / 1000;
+              
+              if (decodedToken.exp < currentTime) {
+                // Token is expired
+                logout();
+                return;
+              }
+              
+              setCurrentUser(userData);
+              setLoading(false);
+              return;
+            } catch (parseError) {
+              console.error('Error parsing saved user data:', parseError);
+              // Se c'è un errore nel parsing, continua con la decodifica del token
+            }
+          }
+          
+          // Fallback: prova a decodificare dal token (per compatibilità con versioni precedenti)
           const decodedToken = jwtDecode(token);
+          console.log('AuthContext - decodedToken (fallback):', decodedToken);
+          
           const currentTime = Date.now() / 1000;
           
           if (decodedToken.exp < currentTime) {
             // Token is expired
             logout();
           } else {
-            // Set current user from token
-            setCurrentUser({
+            // Set current user from token (nota: l'ID potrebbe non essere disponibile)
+            const user = {
               id: decodedToken.id,
               username: decodedToken.sub,
               email: decodedToken.email,
               roles: decodedToken.roles
-            });
+            };
+            console.log('AuthContext - Setting currentUser from token (fallback):', user);
+            setCurrentUser(user);
           }
         } catch (error) {
           console.error('Invalid token:', error);
@@ -59,9 +88,17 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post('/api/auth/signin', { usernameOrEmail, password });
       const { token, id, username, email, roles } = response.data;
       
+      console.log('AuthContext - Login response data:', response.data);
+      console.log('AuthContext - User ID from response:', id);
+      
       localStorage.setItem('token', token);
+      
+      // Salva anche i dati utente nel localStorage per persistenza
+      const userData = { id, username, email, roles };
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
       setToken(token);
-      setCurrentUser({ id, username, email, roles });
+      setCurrentUser(userData);
       
       return { success: true };
     } catch (error) {
@@ -71,7 +108,7 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || 'Errore durante il login. Riprova.'
       };
     }
-  } ;
+  };
 
   const register = async (username, email, password) => {
     try {
@@ -94,6 +131,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userData');
     setToken(null);
     setCurrentUser(null);
     navigate('/login');
