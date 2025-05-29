@@ -41,8 +41,8 @@ api.interceptors.response.use(
 
 // Authentication API
 export const authAPI = {
-  login: (credentials) => api.post('/api/auth/signin', credentials),
-  register: (userData) => api.post('/api/auth/signup', userData),
+  login: (credentials) => api.post('/auth/signin', credentials),
+  register: (userData) => api.post('/auth/signup', userData),
 };
 
 // Classification API
@@ -75,7 +75,8 @@ export const leaderboardAPI = {
 export const resultsAPI = {
   getUserResults: (userId, page = 0, size = 10) => 
     api.get(`/results/user/${userId}?page=${page}&size=${size}`),
-  getResultDetails: (resultId) => api.get(`/results/${resultId}`),
+  getResultDetails: (resultId) => api.get(`/results/id/${resultId}`),
+  getResultByImageId: (imageId) => api.get(`/results/${imageId}`),
 };
 
 // Achievement API

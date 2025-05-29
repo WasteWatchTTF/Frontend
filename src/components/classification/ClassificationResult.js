@@ -33,7 +33,7 @@ import {
   Park as EcoIcon,
   TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
-import { classificationAPI } from '../../services/api';
+import { classificationAPI, resultsAPI } from '../../services/api';
 
 function ClassificationResult() {
   const { id } = useParams();
@@ -42,6 +42,7 @@ function ClassificationResult() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
     const fetchClassificationResult = async () => {
@@ -54,18 +55,47 @@ function ClassificationResult() {
             imageId: location.state.imageId,
             comune: location.state.municipality,
             timestamp: Date.now(),
-            // Prova a recuperare l'imageUrl dal backend
-            imageUrl: null
           };
+          
+          // Costruisci l'URL dell'immagine usando l'imageId
+          if (location.state.imageId) {
+            const constructedImageUrl = `/files/uploads/${location.state.imageId}`;
+            setImageUrl(constructedImageUrl);
+            console.log('Costruito URL immagine da state:', constructedImageUrl);
+          }
           
           // Prova a recuperare i dettagli completi dal backend per avere l'imageUrl
           try {
-            const response = await classificationAPI.getClassificationResult(id);
-            if (response.data && response.data.imageUrl) {
-              stateData.imageUrl = response.data.imageUrl;
+            // Se l'ID sembra un UUID (formato UUID), usa getResultByImageId
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+            let response;
+            
+            if (isUUID) {
+              console.log('Using getResultByImageId for UUID:', id);
+              response = await resultsAPI.getResultByImageId(id);
+            } else {
+              console.log('Using getResultDetails for numeric ID:', id);
+              response = await resultsAPI.getResultDetails(id);
+            }
+            
+            if (response.data) {
+              // Aggiorna i dati con quelli dal backend
+              Object.assign(stateData, response.data);
+              
+              // Costruisci l'URL dell'immagine dal risultato del backend
+              if (response.data.image && response.data.image.storageUrl) {
+                const backendImageUrl = `/files/uploads/${response.data.image.storageUrl}`;
+                setImageUrl(backendImageUrl);
+                console.log('Aggiornato URL immagine da backend:', backendImageUrl);
+              } else if (response.data.imageId) {
+                // Fallback: prova a costruire URL usando imageId
+                const fallbackImageUrl = `/files/uploads/${response.data.imageId}`;
+                setImageUrl(fallbackImageUrl);
+                console.log('URL immagine fallback:', fallbackImageUrl);
+              }
             }
           } catch (apiErr) {
-            console.warn('Non è stato possibile recuperare l\'URL dell\'immagine:', apiErr);
+            console.warn('Non è stato possibile recuperare i dettagli completi:', apiErr);
           }
           
           setResult(stateData);
@@ -73,24 +103,31 @@ function ClassificationResult() {
           return;
         }
 
-        // Altrimenti, prova con l'API normale
-        const response = await classificationAPI.getClassificationResult(id);
+        // Altrimenti, determina quale endpoint usare basandosi sull'ID
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        let response;
+        
+        if (isUUID) {
+          console.log('Using getResultByImageId for UUID:', id);
+          response = await resultsAPI.getResultByImageId(id);
+        } else {
+          console.log('Using getResultDetails for numeric ID:', id);
+          response = await resultsAPI.getResultDetails(id);
+        }
+        
         if (response.data) {
-          // Se la risposta ha la struttura del nuovo formato
-          if (response.data.status === 'SUCCESS') {
-            const resultData = {
-              category: response.data.category,
-              confidence: response.data.confidence,
-              imageId: response.data.imageId,
-              comune: response.data.comune,
-              timestamp: response.data.timestamp,
-              imageUrl: response.data.imageUrl,
-              disposalRule: response.data.disposalRule,
-              disposal_info: response.data.disposal_info
-            };
-            setResult(resultData);
-          } else {
-            setResult(response.data);
+          setResult(response.data);
+          
+          // Costruisci l'URL dell'immagine
+          if (response.data.image && response.data.image.storageUrl) {
+            const resultImageUrl = `/files/uploads/${response.data.image.storageUrl}`;
+            setImageUrl(resultImageUrl);
+            console.log('URL immagine dal risultato completo:', resultImageUrl);
+          } else if (response.data.imageId) {
+            // Fallback usando imageId
+            const fallbackImageUrl = `/files/uploads/${response.data.imageId}`;
+            setImageUrl(fallbackImageUrl);
+            console.log('URL immagine fallback dal risultato:', fallbackImageUrl);
           }
         }
       } catch (err) {
@@ -188,8 +225,8 @@ function ClassificationResult() {
 
       <Paper sx={{ p: { xs: 2, md: 4 }, mb: 4 }} className="classification-result-card">
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ bgcolor: getWasteTypeColor(result.category), mr: 2 }}>
-            {getWasteTypeIcon(result.category)}
+          <Avatar sx={{ bgcolor: getWasteTypeColor(result.category || result.identifiedObject), mr: 2 }}>
+            {getWasteTypeIcon(result.category || result.identifiedObject)}
           </Avatar>
           <Typography variant="h4" component="h1">
             Risultato Classificazione
@@ -201,12 +238,18 @@ function ClassificationResult() {
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
             <Box sx={{ textAlign: 'center', mb: 2 }}>
-              {result.imageUrl && !imageError ? (
+              {imageUrl && !imageError ? (
                 <img
-                  src={result.imageUrl}
+                  src={imageUrl}
                   alt="Classified waste"
                   style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px' }}
-                  onError={() => setImageError(true)}
+                  onError={(e) => {
+                    console.error('Errore caricamento immagine:', imageUrl);
+                    setImageError(true);
+                  }}
+                  onLoad={() => {
+                    console.log('Immagine caricata con successo:', imageUrl);
+                  }}
                 />
               ) : (
                 <Box 
@@ -226,8 +269,13 @@ function ClassificationResult() {
                     {imageError ? 'Immagine non caricata' : 'Immagine non disponibile'}
                   </Typography>
                   <Typography color="text.secondary" variant="caption">
-                    {result.category && `Categoria: ${result.category}`}
+                    {(result.category || result.identifiedObject) && `Categoria: ${result.category || result.identifiedObject}`}
                   </Typography>
+                  {imageError && imageUrl && (
+                    <Typography color="text.secondary" variant="caption" sx={{ mt: 1 }}>
+                      URL tentato: {imageUrl}
+                    </Typography>
+                  )}
                 </Box>
               )}
             </Box>

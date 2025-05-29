@@ -14,19 +14,23 @@ import {
   Button,
   Chip,
   Tabs,
-  Tab
+  Tab,
+  LinearProgress
 } from '@mui/material';
 import {
   EmojiEvents as AchievementsIcon,
   Lock as LockIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
-import { statisticsAPI } from '../../services/api';
+import { achievementAPI } from '../../services/api';
 import { useAuth } from '../../services/AuthContext';
+import { statisticsAPI } from '../../services/api';
 
 function AchievementsList() {
   const { currentUser, isAuthenticated } = useAuth();
   const [achievements, setAchievements] = useState([]);
+  const [userAchievements, setUserAchievements] = useState([]);
+  const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tabValue, setTabValue] = useState(0);
@@ -39,11 +43,101 @@ function AchievementsList() {
       }
 
       try {
-        const response = await statisticsAPI.getUserAchievements(currentUser.id);
-        setAchievements(response.data);
+        console.log('Fetching achievements for user:', currentUser.id);
+        
+        // Recupera tutti gli achievement disponibili
+        const availableResponse = await achievementAPI.getAvailableAchievements();
+        console.log('Available achievements response:', availableResponse);
+        
+        const allAchievements = availableResponse.data || [];
+        console.log('All achievements:', allAchievements);
+        
+        // Se non ci sono achievements disponibili, prova a inizializzarli
+        if (allAchievements.length === 0) {
+          console.log('No achievements found, trying to initialize...');
+          try {
+            const initResponse = await achievementAPI.initializeAchievements();
+            console.log('Achievement initialization response:', initResponse);
+            
+            // Riprova a recuperare gli achievement dopo l'inizializzazione
+            const retryResponse = await achievementAPI.getAvailableAchievements();
+            const retryAchievements = retryResponse.data || [];
+            console.log('Achievements after initialization:', retryAchievements);
+            
+            setAchievements(retryAchievements.map(achievement => ({
+              ...achievement,
+              unlocked: false,
+              unlockedAt: null
+            })));
+            setUserAchievements([]);
+            setLoading(false);
+            return;
+          } catch (initErr) {
+            console.error('Error initializing achievements:', initErr);
+            setError('Impossibile inizializzare i traguardi. Verifica che il server sia accessibile.');
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Recupera gli achievement dell'utente
+        const userResponse = await achievementAPI.getUserAchievements(currentUser.id);
+        console.log('User achievements response:', userResponse);
+        
+        const userAchievementsList = userResponse.data || [];
+        console.log('User achievements:', userAchievementsList);
+        
+        // Crea una mappa degli achievement sbloccati dall'utente
+        const unlockedAchievementIds = new Set(
+          userAchievementsList.map(ua => ua.achievement?.id || ua.achievementId)
+        );
+        
+        console.log('Unlocked achievement IDs:', Array.from(unlockedAchievementIds));
+        
+        // Combina gli achievement disponibili con lo stato di sblocco dell'utente
+        const combinedAchievements = allAchievements.map(achievement => ({
+          ...achievement,
+          unlocked: unlockedAchievementIds.has(achievement.id),
+          unlockedAt: userAchievementsList.find(ua => 
+            (ua.achievement?.id || ua.achievementId) === achievement.id
+          )?.unlockedAt || null
+        }));
+        
+        console.log('Combined achievements:', combinedAchievements);
+        
+        setAchievements(combinedAchievements);
+        setUserAchievements(userAchievementsList);
+        
+        // Recupera anche le statistiche dell'utente per mostrare il progresso
+        try {
+          const statsResponse = await statisticsAPI.getUserStatistics(currentUser.id);
+          console.log('User statistics:', statsResponse.data);
+          setUserStats(statsResponse.data);
+        } catch (statsErr) {
+          console.warn('Could not fetch user statistics:', statsErr);
+        }
       } catch (err) {
         console.error('Error fetching achievements:', err);
-        setError('Impossibile caricare i traguardi. Riprova più tardi.');
+        
+        // Gestione errori più specifica
+        if (err.response) {
+          console.error('Response error:', err.response.status, err.response.data);
+          if (err.response.status === 401) {
+            setError('Devi essere autenticato per visualizzare i traguardi.');
+          } else if (err.response.status === 404) {
+            setError('Servizio traguardi non disponibile.');
+          } else if (err.response.status >= 500) {
+            setError('Errore del server. Riprova più tardi.');
+          } else {
+            setError(`Errore ${err.response.status}: ${err.response.data?.message || 'Impossibile caricare i traguardi'}`);
+          }
+        } else if (err.request) {
+          console.error('Request error:', err.request);
+          setError('Impossibile contattare il server. Verifica la tua connessione internet.');
+        } else {
+          console.error('General error:', err.message);
+          setError('Errore inaspettato durante il caricamento dei traguardi.');
+        }
       } finally {
         setLoading(false);
       }
@@ -88,6 +182,82 @@ function AchievementsList() {
     });
 
     return grouped;
+  };
+
+  // Function to convert technical requirements to user-friendly descriptions
+  const getRequirementDescription = (achievement) => {
+    if (achievement.secret && !achievement.unlocked) {
+      return "Continua a classificare per scoprire questo traguardo segreto!";
+    }
+
+    const conditionType = achievement.activationConditionType;
+    const conditionValue = achievement.activationConditionValue;
+
+    switch (conditionType) {
+      case 'FIRST_CLASSIFICATION':
+        return "Classifica il tuo primo rifiuto";
+      
+      case 'TOTAL_CLASSIFICATIONS':
+        return `Raggiungi ${conditionValue} classificazioni totali`;
+      
+      case 'TOTAL_ECO_POINTS':
+        return `Accumula ${conditionValue} punti eco`;
+      
+      case 'CATEGORY_CLASSIFICATIONS':
+        if (conditionValue && conditionValue.includes(':')) {
+          const [category, count] = conditionValue.split(':');
+          const categoryNames = {
+            'PLASTICA': 'plastica',
+            'CARTA': 'carta', 
+            'VETRO': 'vetro',
+            'ORGANICO': 'organico',
+            'METALLO': 'metallo',
+            'INDIFFERENZIATO': 'indifferenziato'
+          };
+          const categoryName = categoryNames[category] || category.toLowerCase();
+          return `Classifica ${count} oggetti di ${categoryName}`;
+        }
+        return "Classificazione per categoria specifica";
+      
+      case 'STREAK_DAYS':
+        return `Classifica per ${conditionValue} giorni consecutivi`;
+      
+      default:
+        return "Requisito speciale - continua a giocare!";
+    }
+  };
+
+  // Function to get progress percentage for an achievement
+  const getProgressPercentage = (achievement, userStats) => {
+    if (achievement.unlocked) return 100;
+    if (!userStats) return 0;
+
+    const conditionType = achievement.activationConditionType;
+    const conditionValue = achievement.activationConditionValue;
+
+    switch (conditionType) {
+      case 'FIRST_CLASSIFICATION':
+        return userStats.totalClassifications > 0 ? 100 : 0;
+      
+      case 'TOTAL_CLASSIFICATIONS':
+        const target = parseInt(conditionValue);
+        return Math.min(100, (userStats.totalClassifications / target) * 100);
+      
+      case 'TOTAL_ECO_POINTS':
+        const pointsTarget = parseInt(conditionValue);
+        return Math.min(100, (userStats.ecoPoints / pointsTarget) * 100);
+      
+      case 'CATEGORY_CLASSIFICATIONS':
+        if (conditionValue && conditionValue.includes(':')) {
+          const [category, count] = conditionValue.split(':');
+          const userCategoryCount = userStats.materialDistribution?.[category] || 0;
+          return Math.min(100, (userCategoryCount / parseInt(count)) * 100);
+        }
+        return 0;
+      
+      default:
+        return 0;
+    }
   };
 
   if (loading) {
@@ -313,8 +483,26 @@ function AchievementsList() {
                         {!achievement.unlocked && !achievement.secret && achievement.activationConditionType && (
                           <Box sx={{ mt: 1 }}>
                             <Typography variant="caption" color="text.secondary">
-                              Requisito: {achievement.activationConditionType} {achievement.activationConditionValue}
+                              Come ottenerlo: {getRequirementDescription(achievement)}
                             </Typography>
+                            {!achievement.unlocked && userStats && (
+                              <Box sx={{ mt: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  <Box sx={{ width: '100%', mr: 1 }}>
+                                    <LinearProgress 
+                                      variant="determinate" 
+                                      value={getProgressPercentage(achievement, userStats)} 
+                                      sx={{ height: 6, borderRadius: 3 }}
+                                    />
+                                  </Box>
+                                  <Box sx={{ minWidth: 35 }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {Math.round(getProgressPercentage(achievement, userStats))}%
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </Box>
+                            )}
                           </Box>
                         )}
                       </CardContent>
