@@ -54,7 +54,7 @@ export const classificationAPI = {
       }
     }) ;
   },
-  getClassificationResult: (imageId) => api.get(`/classification/result/${imageId}`),
+  getClassificationResult: (taskId) => api.get(`/classification/result/${taskId}`),
   getClassificationStatus: (taskId) => api.get(`/classification/result/${taskId}`),
 };
 
@@ -76,6 +76,20 @@ export const resultsAPI = {
   getUserResults: (userId, page = 0, size = 10) => 
     api.get(`/results/user/${userId}?page=${page}&size=${size}`),
   getResultDetails: (resultId) => api.get(`/results/${resultId}`),
+};
+
+// Achievement API
+export const achievementAPI = {
+  getAvailableAchievements: () => api.get('/achievements/available'),
+  getUserAchievements: (userId) => api.get(`/achievements/user/${userId}`),
+  initializeAchievements: () => api.post('/achievements/initialize'),
+  checkUserAchievements: (userId) => api.post(`/achievements/check/${userId}`),
+};
+
+// Statistics API aggiornate
+export const extendedStatisticsAPI = {
+  getGlobalWeeklyActivity: () => api.get('/statistics/global/weekly-activity'),
+  getGlobalMaterialDistribution: () => api.get('/statistics/global/material-distribution'),
 };
 
 export default api;

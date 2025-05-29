@@ -176,7 +176,19 @@ function ImageClassification() {
   }, [pollingInterval]);
 
   const handleViewDetails = () => {
-    navigate(`/classification/result/${imageId}`);
+    if (imageId) {
+      // Se abbiamo l'imageId, passiamolo tramite lo stato per facilitare il recupero
+      navigate(`/classification/result/${taskId}`, { 
+        state: { 
+          imageId: imageId,
+          municipality: municipality,
+          category: classificationResult?.category,
+          confidence: classificationResult?.confidence
+        } 
+      });
+    } else {
+      navigate(`/classification/result/${taskId}`);
+    }
   };
 
   const handleReset = () => {
