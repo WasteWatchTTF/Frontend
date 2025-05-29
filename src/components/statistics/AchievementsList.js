@@ -468,11 +468,13 @@ function AchievementsList() {
                           />
                         )}
                         
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {achievement.secret && !achievement.unlocked 
-                            ? 'Questo traguardo è segreto. Continua a giocare per scoprirlo!' 
-                            : achievement.description}
-                        </Typography>
+                        {achievement.unlocked && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {achievement.secret && !achievement.unlocked 
+                              ? 'Questo traguardo è segreto. Continua a giocare per scoprirlo!' 
+                              : achievement.description}
+                          </Typography>
+                        )}
                         
                         {achievement.unlocked && (
                           <Typography variant="body2" sx={{ color: '#FFD700' }}>
