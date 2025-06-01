@@ -31,7 +31,12 @@ import {
   Stars as StarsIcon,
   Speed as SpeedIcon,
   Park as EcoIcon,
-  TrendingUp as TrendingUpIcon
+  TrendingUp as TrendingUpIcon,
+  Pets as PetsIcon,
+  Description as DescriptionIcon,
+  LocalBar as LocalBarIcon,
+  Build as BuildIcon,
+  ElectricBolt as ElectricBoltIcon
 } from '@mui/icons-material';
 import { classificationAPI, resultsAPI } from '../../services/api';
 
@@ -41,8 +46,6 @@ function ClassificationResult() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [imageError, setImageError] = useState(false);
-  const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
     const fetchClassificationResult = async () => {
@@ -57,14 +60,7 @@ function ClassificationResult() {
             timestamp: Date.now(),
           };
           
-          // Costruisci l'URL dell'immagine usando l'imageId
-          if (location.state.imageId) {
-            const constructedImageUrl = `/files/uploads/${location.state.imageId}`;
-            setImageUrl(constructedImageUrl);
-            console.log('Costruito URL immagine da state:', constructedImageUrl);
-          }
-          
-          // Prova a recuperare i dettagli completi dal backend per avere l'imageUrl
+          // Prova a recuperare i dettagli completi dal backend
           try {
             // Se l'ID sembra un UUID (formato UUID), usa getResultByImageId
             const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -81,18 +77,6 @@ function ClassificationResult() {
             if (response.data) {
               // Aggiorna i dati con quelli dal backend
               Object.assign(stateData, response.data);
-              
-              // Costruisci l'URL dell'immagine dal risultato del backend
-              if (response.data.image && response.data.image.storageUrl) {
-                const backendImageUrl = `/files/uploads/${response.data.image.storageUrl}`;
-                setImageUrl(backendImageUrl);
-                console.log('Aggiornato URL immagine da backend:', backendImageUrl);
-              } else if (response.data.imageId) {
-                // Fallback: prova a costruire URL usando imageId
-                const fallbackImageUrl = `/files/uploads/${response.data.imageId}`;
-                setImageUrl(fallbackImageUrl);
-                console.log('URL immagine fallback:', fallbackImageUrl);
-              }
             }
           } catch (apiErr) {
             console.warn('Non è stato possibile recuperare i dettagli completi:', apiErr);
@@ -117,18 +101,6 @@ function ClassificationResult() {
         
         if (response.data) {
           setResult(response.data);
-          
-          // Costruisci l'URL dell'immagine
-          if (response.data.image && response.data.image.storageUrl) {
-            const resultImageUrl = `/files/uploads/${response.data.image.storageUrl}`;
-            setImageUrl(resultImageUrl);
-            console.log('URL immagine dal risultato completo:', resultImageUrl);
-          } else if (response.data.imageId) {
-            // Fallback usando imageId
-            const fallbackImageUrl = `/files/uploads/${response.data.imageId}`;
-            setImageUrl(fallbackImageUrl);
-            console.log('URL immagine fallback dal risultato:', fallbackImageUrl);
-          }
         }
       } catch (err) {
         console.error('Error fetching classification result:', err);
@@ -161,8 +133,62 @@ function ClassificationResult() {
 
   // Function to get icon based on waste type
   const getWasteTypeIcon = (wasteType) => {
-    // In a real app, you would use different icons for different waste types
-    return <RecyclingIcon />;
+    const typeIcons = {
+      'PLASTICA': <PetsIcon />,
+      'CARTA': <DescriptionIcon />,
+      'VETRO': <LocalBarIcon />,
+      'ORGANICO': <EcoIcon />,
+      'INDIFFERENZIATO': <DeleteIcon />,
+      'METALLO': <BuildIcon />,
+      'RAEE': <ElectricBoltIcon />,
+    };
+    
+    return typeIcons[wasteType?.toUpperCase()] || <DeleteIcon />;
+  };
+
+  // Function to safely format dates from Java LocalDateTime or other formats
+  const formatDateTime = (dateValue) => {
+    if (!dateValue) return 'Data non disponibile';
+    
+    try {
+      // Handle different date formats that might come from Java backend
+      let date;
+      
+      // If it's already a Date object
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      }
+      // If it's a string (ISO format from Java LocalDateTime)
+      else if (typeof dateValue === 'string') {
+        // Java LocalDateTime might come in format like "2023-12-22T10:30:00" or "2023-12-22T10:30:00.123"
+        date = new Date(dateValue);
+      }
+      // If it's a number (timestamp)
+      else if (typeof dateValue === 'number') {
+        date = new Date(dateValue);
+      }
+      // If it's an array (some APIs return date as array [year, month, day, hour, minute, second])
+      else if (Array.isArray(dateValue) && dateValue.length >= 3) {
+        // Java LocalDateTime might be serialized as [year, month, day, hour, minute, second, nanosecond]
+        const [year, month, day, hour = 0, minute = 0, second = 0] = dateValue;
+        date = new Date(year, month - 1, day, hour, minute, second); // month is 0-indexed in JS
+      }
+      else {
+        // Try to convert to string and parse
+        date = new Date(String(dateValue));
+      }
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date value:', dateValue);
+        return 'Data non valida';
+      }
+      
+      return date.toLocaleString('it-IT');
+    } catch (error) {
+      console.error('Error formatting date:', error, 'Value:', dateValue);
+      return 'Errore data';
+    }
   };
 
   if (loading) {
@@ -237,49 +263,6 @@ function ClassificationResult() {
 
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <Box sx={{ textAlign: 'center', mb: 2 }}>
-              {imageUrl && !imageError ? (
-                <img
-                  src={imageUrl}
-                  alt="Classified waste"
-                  style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px' }}
-                  onError={(e) => {
-                    console.error('Errore caricamento immagine:', imageUrl);
-                    setImageError(true);
-                  }}
-                  onLoad={() => {
-                    console.log('Immagine caricata con successo:', imageUrl);
-                  }}
-                />
-              ) : (
-                <Box 
-                  sx={{ 
-                    height: 200, 
-                    bgcolor: 'grey.100', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    borderRadius: '8px',
-                    border: '2px dashed #ccc'
-                  }}
-                >
-                  <RecyclingIcon sx={{ fontSize: 64, color: 'grey.400', mb: 1 }} />
-                  <Typography color="text.secondary" variant="body2">
-                    {imageError ? 'Immagine non caricata' : 'Immagine non disponibile'}
-                  </Typography>
-                  <Typography color="text.secondary" variant="caption">
-                    {(result.category || result.identifiedObject) && `Categoria: ${result.category || result.identifiedObject}`}
-                  </Typography>
-                  {imageError && imageUrl && (
-                    <Typography color="text.secondary" variant="caption" sx={{ mt: 1 }}>
-                      URL tentato: {imageUrl}
-                    </Typography>
-                  )}
-                </Box>
-              )}
-            </Box>
-
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 Informazioni
@@ -291,7 +274,7 @@ function ClassificationResult() {
                   </ListItemIcon>
                   <ListItemText 
                     primary="Data classificazione" 
-                    secondary={new Date(result.timestamp || Date.now()).toLocaleString()}
+                    secondary={formatDateTime(result.timestamp)}
                   />
                 </ListItem>
                 <ListItem>

@@ -243,13 +243,13 @@ function Leaderboard() {
                           <Typography variant="body2" color="text.secondary">
                             {materialFilter !== 'all' 
                               ? `${item.materialCount || 0} classificazioni di ${materialTypes.find(m => m.value === materialFilter)?.label}`
-                              : `${item.totalClassifications || 0} classificazioni totali`}
+                              : `${item.totalDisposals || 0} classificazioni totali`}
                           </Typography>
                         }
                       />
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="h6" color="primary" fontWeight="bold">
-                          {item.ecoPoints || 0}
+                          {item.totalEcoPoints || 0}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
                           punti

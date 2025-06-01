@@ -143,16 +143,30 @@ function ImageClassification() {
       try {
         const response = await classificationAPI.getClassificationStatus(taskId);
         
-        if (response.data.status === 'SUCCESS' && response.data.result) {
-          // Classification completed
-          setClassificationResult(response.data.result);
-          clearInterval(interval);
-          setPollingInterval(null);
-        } else if (response.data.status === 'FAILED') {
+        if (response.data.status === 'SUCCESS') {
+          // Classification completed - now get the actual result
+          try {
+            const resultResponse = await classificationAPI.getClassificationResult(taskId);
+            if (resultResponse.data && resultResponse.data.status === 'SUCCESS') {
+              // Use the result from the result endpoint
+              setClassificationResult(resultResponse.data.result || resultResponse.data);
+              clearInterval(interval);
+              setPollingInterval(null);
+              setLoading(false);
+            } else {
+              // Handle case where status endpoint says SUCCESS but result endpoint doesn't have data yet
+              console.log('Status is SUCCESS but result not ready yet, continuing polling...');
+            }
+          } catch (resultErr) {
+            console.error('Error getting classification result:', resultErr);
+            // Continue polling in case it's a temporary error
+          }
+        } else if (response.data.status === 'FAILURE' || response.data.status === 'FAILED') {
           // Classification failed
           setError('La classificazione è fallita. Riprova con un\'altra immagine.');
           clearInterval(interval);
           setPollingInterval(null);
+          setLoading(false);
         }
         // If status is still PENDING, continue polling
       } catch (err) {
@@ -160,6 +174,7 @@ function ImageClassification() {
         setError('Errore durante il controllo dello stato della classificazione');
         clearInterval(interval);
         setPollingInterval(null);
+        setLoading(false);
       }
     }, 2000);
     

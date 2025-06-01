@@ -117,6 +117,51 @@ function Dashboard() {
     return typeColors[wasteType?.toUpperCase()] || '#9e9e9e';
   };
 
+  // Function to safely format dates from Java LocalDateTime or other formats
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'Data non disponibile';
+    
+    try {
+      // Handle different date formats that might come from Java backend
+      let date;
+      
+      // If it's already a Date object
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      }
+      // If it's a string (ISO format from Java LocalDateTime)
+      else if (typeof dateValue === 'string') {
+        // Java LocalDateTime might come in format like "2023-12-22T10:30:00" or "2023-12-22T10:30:00.123"
+        date = new Date(dateValue);
+      }
+      // If it's a number (timestamp)
+      else if (typeof dateValue === 'number') {
+        date = new Date(dateValue);
+      }
+      // If it's an array (some APIs return date as array [year, month, day, hour, minute, second])
+      else if (Array.isArray(dateValue) && dateValue.length >= 3) {
+        // Java LocalDateTime might be serialized as [year, month, day, hour, minute, second, nanosecond]
+        const [year, month, day, hour = 0, minute = 0, second = 0] = dateValue;
+        date = new Date(year, month - 1, day, hour, minute, second); // month is 0-indexed in JS
+      }
+      else {
+        // Try to convert to string and parse
+        date = new Date(String(dateValue));
+      }
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date value:', dateValue);
+        return 'Data non valida';
+      }
+      
+      return date.toLocaleDateString('it-IT');
+    } catch (error) {
+      console.error('Error formatting date:', error, 'Value:', dateValue);
+      return 'Errore data';
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
@@ -323,7 +368,7 @@ function Dashboard() {
                                   variant="body2"
                                   color="text.primary"
                                 >
-                                  {new Date(result.timestamp).toLocaleDateString()} - 
+                                  {formatDate(result.timestamp)} - 
                                 </Typography>
                                 {` ${result.municipality || 'Default'}`}
                                 <Box sx={{ mt: 1 }}>
