@@ -168,7 +168,7 @@ const HomePage = () => {
               >
                 L'intelligenza artificiale al servizio dell'ambiente per un futuro più sostenibile
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Button 
                   variant="contained" 
                   size="large" 
