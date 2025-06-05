@@ -25,6 +25,7 @@ import AnimatedBackground from './components/common/AnimatedBackground';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Importa la nuova pagina
 
 // Services
 import { AuthProvider } from './services/AuthContext';
@@ -121,6 +122,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                   
                   {/* Rotte protette (richiedono autenticazione) */}
                   <Route path="/dashboard" element={

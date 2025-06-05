@@ -1,31 +1,53 @@
 import React from 'react';
-import { Box, Container, Paper, Typography } from '@mui/material';
+import { Box, Container, Paper, Typography, useTheme } from '@mui/material'; // Aggiunto useTheme
+import { useTheme as useCustomTheme } from '../services/ThemeContext'; // Rinominato per evitare conflitti
+import RecyclingIcon from '@mui/icons-material/Recycling'; // Aggiunto import per icona
 import Login from '../components/auth/Login';
 
 const LoginPage = () => {
+  const theme = useTheme(); // Hook di MUI per accedere al tema completo
+  const { darkMode } = useCustomTheme(); // Hook personalizzato per sapere se è dark mode
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper 
-        elevation={3}
-        sx={{ 
-          p: 4, 
-          borderRadius: 2,
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-        }}
-      >
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-            Accedi a WasteWatch
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Inserisci le tue credenziali per accedere alla piattaforma
-          </Typography>
-        </Box>
-        
-        <Login />
-      </Paper>
-    </Container>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: theme.palette.background.default, // Sfondo dal tema
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: { xs: 4, md: 6 }
+      }}
+    >
+      <Container maxWidth="xs" sx={{ px: 2 }}> {/* Ridotto maxWidth per un form più compatto e aggiunto padding orizzontale */} 
+        <Paper 
+          elevation={6} // Aumentata elevazione per maggiore distacco
+          sx={{ 
+            p: { xs: 3, sm: 4 }, // Padding responsivo
+            borderRadius: 3, // Aumentato borderRadius
+            boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0,0,0,0.1)', // Ombra adattiva
+            backgroundColor: theme.palette.background.paper, // Sfondo del form dal tema
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+            <RecyclingIcon sx={{ fontSize: 50, color: 'primary.main', mb: 1 }} />
+            <Typography variant="h5" component="div" fontWeight="bold" color="text.primary">
+              WasteWatch
+            </Typography>
+          </Box>
+
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom color="text.primary">
+              Accedi
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Bentornato! Inserisci le tue credenziali.
+            </Typography>
+          </Box>
+          
+          <Login />
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
