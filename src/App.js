@@ -18,6 +18,7 @@ import ClassificationResult from './components/classification/ClassificationResu
 import Leaderboard from './components/leaderboard/Leaderboard';
 import UserStatistics from './components/statistics/UserStatistics';
 import AchievementsList from './components/statistics/AchievementsList';
+import UserProfile from './components/profile/UserProfile';
 import NotFound from './components/common/NotFound';
 import AnimatedBackground from './components/common/AnimatedBackground';
 
@@ -25,6 +26,7 @@ import AnimatedBackground from './components/common/AnimatedBackground';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // Importa la nuova pagina
 
 // Services
 import { AuthProvider } from './services/AuthContext';
@@ -121,6 +123,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                   
                   {/* Rotte protette (richiedono autenticazione) */}
                   <Route path="/dashboard" element={
@@ -151,6 +154,11 @@ function App() {
                   <Route path="/achievements" element={
                     <ProtectedRoute>
                       <AchievementsList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <UserProfile />
                     </ProtectedRoute>
                   } />
                   

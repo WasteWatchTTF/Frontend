@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Link, Grid, IconButton, Divider, Button, TextField, Paper, useTheme } from '@mui/material';
+import { Box, Container, Typography, Link as MuiLink, Grid, IconButton, Divider, Button, TextField, useTheme } from '@mui/material';
 import { 
   Facebook, 
   Twitter, 
@@ -12,7 +12,7 @@ import {
   RecyclingTwoTone as RecyclingIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom'; // Assicurarsi che RouterLink sia importato
 
 // Styled components
 const SocialIconButton = styled(IconButton)(({ theme }) => ({
@@ -27,7 +27,7 @@ const SocialIconButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
-const FooterLink = styled(Link)(({ theme }) => ({
+const FooterLink = styled(MuiLink)(({ theme }) => ({
   color: 'rgba(255, 255, 255, 0.7)',
   display: 'block',
   marginBottom: theme.spacing(1),
@@ -112,283 +112,125 @@ function Footer() {
     <FooterSection
       component="footer"
       sx={{
-        pt: 6,
-        pb: 4,
+        pt: 3, // Ulteriore riduzione padding top
+        pb: 2, // Ulteriore riduzione padding bottom
         mt: 'auto',
         backgroundColor: '#1e3a2f',
         backgroundImage: 'linear-gradient(to right, #1e3a2f, #2e5a40)',
         color: 'white',
-        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 -1px 5px rgba(0, 0, 0, 0.08)', // Ombra ancora più leggera
       }}
     >
       <Container maxWidth="lg">
         <Grid container spacing={4} justifyContent="space-between">
-          <Grid item xs={12} md={4}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          {/* Colonna Logo e Descrizione */} 
+          <Grid item xs={12} md={7} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', mb: 2 }}>
               <RecyclingIcon 
                 sx={{ 
-                  fontSize: 36, 
+                  fontSize: 32, // Ridotto ulteriormente
                   mr: 1,
-                  color: '#4caf50',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  color: 'primary.main',
+                  filter: 'drop-shadow(0 1px 3px rgba(76,175,80,0.25))'
                 }} 
               />
               <Typography 
-                variant="h5" 
+                variant="h6" // Ridotto da h5
+                component="div"
                 sx={{ 
-                  fontWeight: 700,
-                  background: 'linear-gradient(45deg, #ffffff 30%, #e0f2f1 90%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  fontWeight: 'bold',
+                  letterSpacing: '0.1px',
+                  color: 'white',
                 }}
               >
                 WasteWatch
               </Typography>
             </Box>
             <Typography 
-              variant="body2" 
-              color="rgba(255, 255, 255, 0.7)"
-              sx={{ mb: 3, maxWidth: 300 }}
+              variant="body2" // Ridotto da body1
+              color="rgba(255, 255, 255, 0.75)"
+              sx={{ mb: 1.5, lineHeight: 1.5, fontSize: '0.85rem' }} // Font, interlinea e margine ridotti
             >
-              Riconosci e smaltisci correttamente i rifiuti con l'aiuto dell'intelligenza artificiale. 
-              Contribuisci a un mondo più pulito e sostenibile.
+              La tua guida smart per un riciclo consapevole. 
+              Identifica i materiali con una foto e contribuisci a un futuro più verde.
             </Typography>
-            
-            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-              Contattaci
-            </Typography>
-            
-            <ContactItem>
-              <LocationIcon sx={{ mr: 1, fontSize: 20 }} />
-              <Typography variant="body2">
-                Via dell'Ambiente 123, Milano, Italia
-              </Typography>
-            </ContactItem>
-            
-            <ContactItem>
-              <EmailIcon sx={{ mr: 1, fontSize: 20 }} />
-              <Typography variant="body2">
-                info@wastewatch.it
-              </Typography>
-            </ContactItem>
-            
-            <ContactItem>
-              <PhoneIcon sx={{ mr: 1, fontSize: 20 }} />
-              <Typography variant="body2">
-                +39 02 1234567
-              </Typography>
-            </ContactItem>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={3}>
+          {/* Colonna Link Utili/Legali */} 
+          <Grid item xs={12} md={5} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
             <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 3, 
+              variant="subtitle2" // Ridotto da subtitle1
+              fontWeight={600}
+              sx={{
+                mb: 2,
                 position: 'relative',
+                color: 'white',
+                display: 'inline-block',
                 '&::after': {
                   content: '""',
                   position: 'absolute',
-                  bottom: -8,
-                  left: 0,
-                  width: 40,
-                  height: 3,
-                  backgroundColor: theme.palette.primary.main,
-                  borderRadius: 2,
+                  bottom: -5, // Sottolineatura ancora più vicina
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '60%', // Sottolineatura più corta
+                  height: 2, // Sottolineatura ancora più sottile
+                  backgroundColor: 'primary.light',
+                  borderRadius: '2px',
+                  ...(theme.breakpoints.up('md') && {
+                    left: 0,
+                    transform: 'none',
+                    width: 35, // Sottolineatura ancora più corta per md
+                  }),
                 }
               }}
             >
               Link Utili
             </Typography>
-            
-            <FooterLink component={RouterLink} to="/">
-              Home
-            </FooterLink>
-            <FooterLink component={RouterLink} to="/about">
-              Chi Siamo
-            </FooterLink>
-            <FooterLink component={RouterLink} to="/classification">
-              Classifica Rifiuti
-            </FooterLink>
-            <FooterLink component={RouterLink} to="/statistics">
-              Statistiche
-            </FooterLink>
-            <FooterLink component={RouterLink} to="/leaderboard">
-              Classifica
-            </FooterLink>
-            <FooterLink component={RouterLink} to="/achievements">
-              Traguardi
-            </FooterLink>
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={2}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 3,
-                position: 'relative',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: -8,
-                  left: 0,
-                  width: 40,
-                  height: 3,
-                  backgroundColor: theme.palette.primary.main,
-                  borderRadius: 2,
-                }
-              }}
-            >
-              Legali
-            </Typography>
-            
-            <FooterLink href="#">
-              Privacy Policy
-            </FooterLink>
-            <FooterLink href="#">
-              Termini di Servizio
-            </FooterLink>
-            <FooterLink href="#">
-              Cookie Policy
-            </FooterLink>
-            <FooterLink href="#">
-              FAQ
-            </FooterLink>
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 3,
-                position: 'relative',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: -8,
-                  left: 0,
-                  width: 40,
-                  height: 3,
-                  backgroundColor: theme.palette.primary.main,
-                  borderRadius: 2,
-                }
-              }}
-            >
-              Newsletter
-            </Typography>
-            
-            <Typography 
-              variant="body2" 
-              color="rgba(255, 255, 255, 0.7)"
-              sx={{ mb: 2 }}
-            >
-              Iscriviti alla nostra newsletter per ricevere aggiornamenti e consigli sul riciclo.
-            </Typography>
-            
-            <Box sx={{ display: 'flex', mb: 3 }}>
-              <NewsletterInput
-                label="La tua email"
-                variant="outlined"
-                size="small"
-                fullWidth
-                sx={{ mr: 1 }}
-              />
-              <Button 
-                variant="contained" 
-                color="primary"
-                sx={{ 
-                  borderRadius: 30,
-                  minWidth: 'auto',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-3px)',
-                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
-                  }
-                }}
-              >
-                <SendIcon />
-              </Button>
-            </Box>
-            
-            <Typography 
-              variant="subtitle2" 
-              fontWeight={600}
-              sx={{ mb: 2 }}
-            >
-              Seguici
-            </Typography>
-            
-            <Box sx={{ display: 'flex' }}>
-              <SocialIconButton aria-label="facebook">
-                <Facebook />
-              </SocialIconButton>
-              <SocialIconButton aria-label="twitter">
-                <Twitter />
-              </SocialIconButton>
-              <SocialIconButton aria-label="instagram">
-                <Instagram />
-              </SocialIconButton>
-              <SocialIconButton aria-label="linkedin">
-                <LinkedIn />
-              </SocialIconButton>
-            </Box>
+            <FooterLink component={RouterLink} to="/">Home</FooterLink>
+            <FooterLink component={RouterLink} to="/classification">Classifica Rifiuti</FooterLink>
+            <FooterLink component={RouterLink} to="/statistics">Statistiche</FooterLink>
+            <FooterLink component={RouterLink} to="/leaderboard">Classifica Utenti</FooterLink>
+            <FooterLink component={RouterLink} to="/achievements">Traguardi</FooterLink>
+            {/* Privacy Policy spostata in basso */}
+            {/* <FooterLink component={MuiLink} href="#" onClick={(e) => e.preventDefault()}>Termini</FooterLink> */}
+            {/* <FooterLink component={MuiLink} href="#" onClick={(e) => e.preventDefault()}>Cookie</FooterLink> */}
           </Grid>
         </Grid>
         
-        <Divider sx={{ my: 4, backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
-        
+        {/* Divider rimosso per un look più compatto, il Box sottostante avrà un bordo superiore */}
         <Box sx={{ 
-          display: 'flex', 
+          display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
           justifyContent: 'space-between',
-          alignItems: { xs: 'center', sm: 'center' },
+          alignItems: 'center',
+          textAlign: 'center',
+          pt: 2, // Ridotto padding sopra il copyright
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
+          mt: 3 // Ridotto margine sopra la sezione copyright
         }}>
           <Typography 
-            variant="body2" 
+            variant="caption" 
             color="rgba(255, 255, 255, 0.6)"
-            sx={{ mb: { xs: 2, sm: 0 } }}
+            sx={{ fontSize: '0.75rem', mb: { xs: 1, sm: 0 } }}
           >
             © {new Date().getFullYear()} WasteWatch. Tutti i diritti riservati.
           </Typography>
-          
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Typography 
-              variant="body2" 
-              component={Link}
-              href="#"
-              sx={{ 
-                color: 'rgba(255, 255, 255, 0.6)',
-                textDecoration: 'none',
-                '&:hover': { color: 'white' }
-              }}
-            >
-              Privacy
-            </Typography>
-            <Typography 
-              variant="body2" 
-              component={Link}
-              href="#"
-              sx={{ 
-                color: 'rgba(255, 255, 255, 0.6)',
-                textDecoration: 'none',
-                '&:hover': { color: 'white' }
-              }}
-            >
-              Termini
-            </Typography>
-            <Typography 
-              variant="body2" 
-              component={Link}
-              href="#"
-              sx={{ 
-                color: 'rgba(255, 255, 255, 0.6)',
-                textDecoration: 'none',
-                '&:hover': { color: 'white' }
-              }}
-            >
-              Cookie
-            </Typography>
-          </Box>
+          <Typography 
+            variant="caption" 
+            component={RouterLink} 
+            to="/privacy-policy"
+            sx={{ 
+              fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.6)', 
+              textDecoration: 'none',
+              '&:hover': { 
+                color: 'white', 
+                textDecoration: 'underline' 
+              }
+            }}
+          >
+            Privacy Policy
+          </Typography>
         </Box>
       </Container>
     </FooterSection>

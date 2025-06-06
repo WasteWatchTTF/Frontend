@@ -21,7 +21,6 @@ import {
   useScrollTrigger,
   Slide,
   Fade,
-  Badge,
   Chip,
 } from '@mui/material';
 import {
@@ -34,7 +33,6 @@ import {
   Login as LoginIcon,
   PersonAdd as RegisterIcon,
   Logout as LogoutIcon,
-  Notifications as NotificationsIcon,
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
   ExpandMore as ExpandMoreIcon,
@@ -95,35 +93,6 @@ const UserAvatar = styled(Avatar)(({ theme }) => ({
   },
 }));
 
-const NotificationBadge = styled(Badge)(({ theme }) => ({
-  '& .MuiBadge-badge': {
-    backgroundColor: '#ff9800',
-    color: 'white',
-    boxShadow: '0 0 10px rgba(255, 152, 0, 0.5)',
-    '&::after': {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      borderRadius: '50%',
-      animation: 'ripple 1.2s infinite ease-in-out',
-      border: '1px solid currentColor',
-      content: '""',
-    },
-  },
-  '@keyframes ripple': {
-    '0%': {
-      transform: 'scale(.8)',
-      opacity: 1,
-    },
-    '100%': {
-      transform: 'scale(2.4)',
-      opacity: 0,
-    },
-  },
-}));
-
 // Pagine disponibili solo per utenti autenticati
 const authenticatedPages = [
   { name: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
@@ -151,9 +120,7 @@ function Header() {
   const location = useLocation();
   
   const [anchorElUser, setAnchorElUser] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]); 
-  const [anchorElNotifications, setAnchorElNotifications] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false); // Ripristinato stato per il drawer
   const [scrolled, setScrolled] = useState(false);
 
   // Hide header on scroll down, show on scroll up
@@ -177,30 +144,12 @@ function Header() {
     };
   }, [scrolled]);
 
-  // Mock notifications - in a real app these would come from an API
-  useEffect(() => {
-    if (isAuthenticated) {
-      setNotifications([
-        { id: 1, message: 'Hai sbloccato un nuovo traguardo!', read: false },
-        { id: 2, message: 'La tua classificazione è stata completata', read: false },
-      ]);
-    }
-  }, [isAuthenticated]);
-
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
   };
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
-  };
-
-  const handleOpenNotifications = (event) => {
-    setAnchorElNotifications(event.currentTarget);
-  };
-
-  const handleCloseNotifications = () => {
-    setAnchorElNotifications(null);
   };
 
   const handleLogout = () => {
@@ -222,7 +171,6 @@ function Header() {
     return name.charAt(0).toUpperCase();
   };
   
-  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
 
   return (
     <Slide appear={false} direction="down" in={!trigger}>
@@ -453,8 +401,14 @@ function Header() {
                           <ListItem 
                             button 
                             key={page.name}
-                            component={RouterLink}
-                            to={page.path}
+                            onClick={() => {
+                              if (isAuthenticated) {
+                                navigate('/dashboard');
+                              } else {
+                                navigate(page.path);
+                              }
+                              setDrawerOpen(false);
+                            }}
                             selected={location.pathname === page.path}
                             sx={{
                               borderRadius: '0 24px 24px 0',
@@ -599,97 +553,7 @@ function Header() {
 
               {isAuthenticated ? (
                 <>
-                  {/* Notifications */}
-                  <Tooltip title="Notifiche">
-                    <IconButton 
-                      onClick={handleOpenNotifications} 
-                      color="inherit"
-                      sx={{ mr: 2 }}
-                    >
-                      <NotificationBadge badgeContent={unreadNotificationsCount} color="error">
-                        <NotificationsIcon />
-                      </NotificationBadge>
-                    </IconButton>
-                  </Tooltip>
-                  <Menu
-                    sx={{ mt: '45px' }}
-                    id="notifications-menu"
-                    anchorEl={anchorElNotifications}
-                    anchorOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    keepMounted
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    open={Boolean(anchorElNotifications)}
-                    onClose={handleCloseNotifications}
-                    PaperProps={{
-                      elevation: 3,
-                      sx: {
-                        overflow: 'visible',
-                        filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))',
-                        mt: 1.5,
-                        width: 320,
-                        borderRadius: 2,
-                        '&:before': {
-                          content: '""',
-                          display: 'block',
-                          position: 'absolute',
-                          top: 0,
-                          right: 14,
-                          width: 10,
-                          height: 10,
-                          bgcolor: 'background.paper',
-                          transform: 'translateY(-50%) rotate(45deg)',
-                          zIndex: 0,
-                        },
-                      },
-                    }}
-                  >
-                    <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-                      <Typography variant="h6" fontWeight={600}>Notifiche</Typography>
-                    </Box>
-                    {notifications.length > 0 ? (
-                      <List sx={{ p: 0 }}>
-                        {notifications.map((notification) => (
-                          <ListItem 
-                            key={notification.id} 
-                            sx={{ 
-                              borderLeft: notification.read ? 'none' : '4px solid',
-                              borderColor: 'primary.main',
-                              bgcolor: notification.read ? 'transparent' : 'rgba(76, 175, 80, 0.08)',
-                              transition: 'all 0.3s ease',
-                              '&:hover': {
-                                bgcolor: 'rgba(76, 175, 80, 0.05)',
-                              }
-                            }}
-                          >
-                            <ListItemText 
-                              primary={notification.message} 
-                              secondary={"Adesso"}
-                              primaryTypographyProps={{
-                                fontWeight: notification.read ? 400 : 600,
-                              }}
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    ) : (
-                      <Box sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Nessuna notifica
-                        </Typography>
-                      </Box>
-                    )}
-                    <Box sx={{ p: 1, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
-                      <Button size="small" color="primary">
-                        Vedi tutte
-                      </Button>
-                    </Box>
-                  </Menu>
+                  {/* Blocco Notifiche Rimosso */}
 
                   {/* User menu */}
                   <Tooltip title="Impostazioni account">
@@ -767,7 +631,7 @@ function Header() {
                       <ListItemIcon>
                         <Avatar sx={{ width: 24, height: 24 }} />
                       </ListItemIcon>
-                      <ListItemText primary="Profilo" />
+                    <ListItemText primary="Profilo" />
                     </MenuItem>
                     <MenuItem onClick={handleLogout} sx={{ py: 1.5 }}>
                       <ListItemIcon>
@@ -782,8 +646,13 @@ function Header() {
                   {authPages.map((page) => (
                     <Button
                       key={page.name}
-                      component={RouterLink}
-                      to={page.path}
+                      onClick={() => {
+                        if (isAuthenticated) {
+                          navigate('/dashboard');
+                        } else {
+                          navigate(page.path);
+                        }
+                      }}
                       variant={page.name === 'Accedi' ? 'outlined' : 'contained'}
                       className="btn-hover-effect"
                       sx={{ 

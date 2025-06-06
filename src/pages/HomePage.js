@@ -26,7 +26,9 @@ import { Link as RouterLink } from 'react-router-dom';
 // Componenti stilizzati
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
-  backgroundImage: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+  backgroundImage: 'url(/homepage.jpeg)', // Nuova immagine di sfondo
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
   color: 'white',
   padding: theme.spacing(15, 0),
   borderRadius: '0 0 20% 20%/10%',
@@ -38,7 +40,8 @@ const HeroSection = styled(Box)(({ theme }) => ({
     left: 0,
     width: '100%',
     height: '100%',
-    backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%)',
+    // Overlay scuro per leggibilità del testo
+    background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.8) 100%)',
     zIndex: 1,
   }
 }));
@@ -147,8 +150,8 @@ const HomePage = () => {
       {/* Hero Section */}
       <HeroSection>
         <Container maxWidth="lg">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={6} sx={{ position: 'relative', zIndex: 2 }}>
+          <Grid container spacing={4} alignItems="center" justifyContent="center"> {/* Aggiunto justifyContent per centrare il testo se md non è 12 */}
+            <Grid item xs={12} md={12} sx={{ position: 'relative', zIndex: 2, textAlign: { xs: 'left', md: 'center' } }}> {/* md={12} e testo centrato su schermi medi e grandi */}
               <Typography 
                 variant="h2" 
                 component="h1" 
@@ -165,7 +168,7 @@ const HomePage = () => {
               >
                 L'intelligenza artificiale al servizio dell'ambiente per un futuro più sostenibile
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Button 
                   variant="contained" 
                   size="large" 
@@ -205,24 +208,7 @@ const HomePage = () => {
                 </Button>
               </Box>
             </Grid>
-            <Grid item xs={12} md={6} sx={{ position: 'relative', zIndex: 2 }}>
-              <Box 
-                component="img"
-                src="https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                alt="Riciclo Intelligente"
-                sx={{
-                  width: '100%',
-                  borderRadius: 4,
-                  boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2)',
-                  transform: 'perspective(1000px) rotateY(-5deg)',
-                  transition: 'all 0.5s ease',
-                  '&:hover': {
-                    transform: 'perspective(1000px) rotateY(0deg)',
-                  }
-                }}
-                className="fade-in"
-              />
-            </Grid>
+            {/* Grid item con immagine rimosso */}
           </Grid>
         </Container>
       </HeroSection>
@@ -441,9 +427,6 @@ const HomePage = () => {
                 <TeamAvatar src={member.avatar} alt={member.name} />
                 <Typography variant="h6" fontWeight="bold">
                   {member.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {member.role}
                 </Typography>
               </TeamMember>
             </Grid>
