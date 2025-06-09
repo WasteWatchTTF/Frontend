@@ -18,6 +18,7 @@ import ClassificationResult from './components/classification/ClassificationResu
 import Leaderboard from './components/leaderboard/Leaderboard';
 import UserStatistics from './components/statistics/UserStatistics';
 import AchievementsList from './components/statistics/AchievementsList';
+import UserProfile from './components/profile/UserProfile';
 import NotFound from './components/common/NotFound';
 import AnimatedBackground from './components/common/AnimatedBackground';
 
@@ -153,6 +154,11 @@ function App() {
                   <Route path="/achievements" element={
                     <ProtectedRoute>
                       <AchievementsList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <UserProfile />
                     </ProtectedRoute>
                   } />
                   

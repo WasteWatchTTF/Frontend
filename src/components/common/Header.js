@@ -401,8 +401,14 @@ function Header() {
                           <ListItem 
                             button 
                             key={page.name}
-                            component={RouterLink}
-                            to={page.path}
+                            onClick={() => {
+                              if (isAuthenticated) {
+                                navigate('/dashboard');
+                              } else {
+                                navigate(page.path);
+                              }
+                              setDrawerOpen(false);
+                            }}
                             selected={location.pathname === page.path}
                             sx={{
                               borderRadius: '0 24px 24px 0',
@@ -625,7 +631,7 @@ function Header() {
                       <ListItemIcon>
                         <Avatar sx={{ width: 24, height: 24 }} />
                       </ListItemIcon>
-                      <ListItemText primary="Profilo" />
+                    <ListItemText primary="Profilo" />
                     </MenuItem>
                     <MenuItem onClick={handleLogout} sx={{ py: 1.5 }}>
                       <ListItemIcon>
@@ -640,8 +646,13 @@ function Header() {
                   {authPages.map((page) => (
                     <Button
                       key={page.name}
-                      component={RouterLink}
-                      to={page.path}
+                      onClick={() => {
+                        if (isAuthenticated) {
+                          navigate('/dashboard');
+                        } else {
+                          navigate(page.path);
+                        }
+                      }}
                       variant={page.name === 'Accedi' ? 'outlined' : 'contained'}
                       className="btn-hover-effect"
                       sx={{ 

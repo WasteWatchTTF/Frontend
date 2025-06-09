@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || '';
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -91,6 +91,12 @@ export const achievementAPI = {
 export const extendedStatisticsAPI = {
   getGlobalWeeklyActivity: () => api.get('/statistics/global/weekly-activity'),
   getGlobalMaterialDistribution: () => api.get('/statistics/global/material-distribution'),
+};
+
+// Badge API
+export const badgeAPI = {
+  generateBadge: () => api.get('/badge/generate', { responseType: 'blob' }),
+  previewBadge: () => api.get('/badge/preview'),
 };
 
 export default api;
