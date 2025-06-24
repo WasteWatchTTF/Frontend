@@ -12,15 +12,27 @@ RUN npm ci --only=production
 # Copy source code
 COPY . .
 
-# Set environment variables for build
-ENV REACT_APP_API_URL=http://localhost:8080/api
-ENV REACT_APP_NAME=WasteWatch
+# Build arguments (passati da docker-compose)
+ARG REACT_APP_API_URL
+ARG REACT_APP_NAME
+
+# Set environment variables per il build
+ENV REACT_APP_API_URL=${REACT_APP_API_URL:-/api}
+ENV REACT_APP_NAME=${REACT_APP_NAME:-WasteWatch}
+
+# Debug: mostra le variabili durante il build
+RUN echo "Building with:" && \
+    echo "REACT_APP_API_URL=$REACT_APP_API_URL" && \
+    echo "REACT_APP_NAME=$REACT_APP_NAME"
 
 # Build the app
 RUN npm run build
 
 # Production stage
 FROM nginx:alpine
+
+# Install curl per health check
+RUN apk add --no-cache curl
 
 # Copy built app from build stage
 COPY --from=build /app/build /usr/share/nginx/html
@@ -31,8 +43,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Expose port 80
 EXPOSE 80
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+# Health check aggiornato
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost/health || exit 1
 
-CMD ["nginx", "-g", "daemon off;"] 
+CMD ["nginx", "-g", "daemon off;"]
